@@ -6,15 +6,24 @@ export default defineConfig({
   build: {
     sourcemap: true
   },
-  // Note: For local dev you can uncomment proxy if you run a local proxy.
-  // server: {
-  //   proxy: {
-  //     '/sortly': {
-  //       target: 'https://api.sortly.com',
-  //       changeOrigin: true,
-  //       rewrite: (path) => path.replace(/^\/sortly/, ''),
-  //     },
-  //   },
-  // },
+  server: {
+    proxy: {
+      '/sortly': {
+        target: 'https://api.sortly.com',
+        changeOrigin: true,
+        secure: true,
+        rewrite: (path) => path.replace(/^\/sortly/, ''),
+        configure: (proxy) => {
+          proxy.on('proxyReq', (proxyReq, req) => {
+            const cookie = req.headers['x-proxy-cookie'] as string | undefined
+            if (cookie) {
+              proxyReq.setHeader('cookie', cookie)
+            }
+            // Drop the custom header so it isn't forwarded upstream
+            proxyReq.removeHeader?.('x-proxy-cookie')
+          })
+        },
+      },
+    },
+  },
 })
-

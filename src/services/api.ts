@@ -1,6 +1,15 @@
 import type { ProductNode, ProductResponse } from '../types'
 
-const BASE = 'https://api.sortly.com'
+const RAW_API_BASE: string = (import.meta as any).env?.VITE_API_BASE || 'https://api.sortly.com'
+function resolveBase(): URL {
+  // Support absolute or relative (e.g., '/sortly') bases
+  try {
+    return new URL(RAW_API_BASE)
+  } catch {
+    return new URL(RAW_API_BASE, window.location.origin)
+  }
+}
+const API_BASE = resolveBase()
 
 function assertOk(res: Response) {
   if (!res.ok) {
@@ -8,14 +17,16 @@ function assertOk(res: Response) {
   }
 }
 
-function buildHeaders(cookieString: string): HeadersInit {
-  // WARNING: Browsers forbid setting the Cookie header. This is kept to
-  // express intent; requests will only include cookies if the browser has
-  // first-party cookies for the API origin and credentials: 'include'.
-  return {
-    // 'cookie': cookieString, // forbidden in browsers
-    'content-type': 'application/json',
+function buildHeaders(cookieString: string, method: string): HeadersInit {
+  const usingProxy = !/api\.sortly\.com$/i.test(API_BASE.hostname)
+  const headers: HeadersInit = {}
+  if (method !== 'GET' && method !== 'HEAD') {
+    ;(headers as any)['content-type'] = 'application/json'
   }
+  if (usingProxy) {
+    ;(headers as any)['x-proxy-cookie'] = cookieString
+  }
+  return headers
 }
 
 function mapResponse(json: any): ProductResponse {
@@ -34,7 +45,7 @@ function mapResponse(json: any): ProductResponse {
 }
 
 export async function fetchProducts({ companyId, cookieString, limit = 10, offset = 0 }: { companyId: string; cookieString: string; limit?: number; offset?: number }): Promise<ProductResponse> {
-  const url = new URL(`${BASE}/v3/companies/${encodeURIComponent(companyId)}/nodes`)
+  const url = new URL(`/v3/companies/${encodeURIComponent(companyId)}/nodes`, API_BASE)
   url.searchParams.set('limit', String(limit))
   url.searchParams.set('offset', String(offset))
   url.searchParams.set('sort_by', 'updated_at')
@@ -44,8 +55,8 @@ export async function fetchProducts({ companyId, cookieString, limit = 10, offse
 
   const res = await fetch(url.toString(), {
     method: 'GET',
-    headers: buildHeaders(cookieString),
-    credentials: 'include',
+    headers: buildHeaders(cookieString, 'GET'),
+    credentials: /api\.sortly\.com$/i.test(API_BASE.hostname) ? 'include' : 'omit',
     mode: 'cors',
   })
   assertOk(res)
@@ -54,7 +65,7 @@ export async function fetchProducts({ companyId, cookieString, limit = 10, offse
 }
 
 export async function fetchProductsByParent({ companyId, cookieString, parentId, limit = 100, offset = 0 }: { companyId: string; cookieString: string; parentId: string; limit?: number; offset?: number }): Promise<ProductResponse> {
-  const url = new URL(`${BASE}/v3/companies/${encodeURIComponent(companyId)}/nodes`)
+  const url = new URL(`/v3/companies/${encodeURIComponent(companyId)}/nodes`, API_BASE)
   url.searchParams.set('limit', String(limit))
   url.searchParams.set('offset', String(offset))
   url.searchParams.set('sort_by', 'updated_at')
@@ -65,8 +76,8 @@ export async function fetchProductsByParent({ companyId, cookieString, parentId,
 
   const res = await fetch(url.toString(), {
     method: 'GET',
-    headers: buildHeaders(cookieString),
-    credentials: 'include',
+    headers: buildHeaders(cookieString, 'GET'),
+    credentials: /api\.sortly\.com$/i.test(API_BASE.hostname) ? 'include' : 'omit',
     mode: 'cors',
   })
   assertOk(res)
@@ -75,15 +86,14 @@ export async function fetchProductsByParent({ companyId, cookieString, parentId,
 }
 
 export async function patchProductPrice({ companyId, cookieString, nodeId, price }: { companyId: string; cookieString: string; nodeId: string; price: number }): Promise<void> {
-  const url = `${BASE}/v2/companies/${encodeURIComponent(companyId)}/nodes/${encodeURIComponent(nodeId)}`
+  const url = new URL(`/v2/companies/${encodeURIComponent(companyId)}/nodes/${encodeURIComponent(nodeId)}`, API_BASE).toString()
   const body = JSON.stringify({ node: { price: price.toFixed(2) } })
   const res = await fetch(url, {
     method: 'PATCH',
-    headers: buildHeaders(cookieString),
-    credentials: 'include',
+    headers: buildHeaders(cookieString, 'PATCH'),
+    credentials: /api\.sortly\.com$/i.test(API_BASE.hostname) ? 'include' : 'omit',
     mode: 'cors',
     body,
   })
   assertOk(res)
 }
-
