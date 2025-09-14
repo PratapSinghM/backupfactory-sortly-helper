@@ -1,0 +1,55 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "npm install",
+      "type": "shell",
+      "command": "npm install"
+    },
+    {
+      "label": "vite dev",
+      "type": "shell",
+      "command": "npm run dev",
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "vite",
+        "pattern": [
+          { "regexp": ".*", "message": 0 }
+        ],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "VITE v\\d",
+          "endsPattern": "Local:\\s+http://localhost:"
+        }
+      },
+      "options": {
+        "env": {
+          "BROWSER": "none"
+        }
+      }
+    },
+    {
+      "label": "vite preview",
+      "type": "shell",
+      "command": "npm run preview",
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "vite-preview",
+        "pattern": [
+          { "regexp": ".*", "message": 0 }
+        ],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "Local:\\s+http://localhost:4173",
+          "endsPattern": "Local:\\s+http://localhost:4173"
+        }
+      }
+    },
+    {
+      "label": "vite build",
+      "type": "shell",
+      "command": "npm run build"
+    }
+  ]
+}
+

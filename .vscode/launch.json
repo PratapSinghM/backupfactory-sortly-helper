@@ -1,0 +1,36 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug: Vite + Chrome",
+      "type": "pwa-chrome",
+      "request": "launch",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}",
+      "preLaunchTask": "vite dev"
+    },
+    {
+      "name": "Debug: Vite + Edge",
+      "type": "pwa-msedge",
+      "request": "launch",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}",
+      "preLaunchTask": "vite dev"
+    },
+    {
+      "name": "Preview production build",
+      "type": "pwa-chrome",
+      "request": "launch",
+      "url": "http://localhost:4173",
+      "webRoot": "${workspaceFolder}",
+      "preLaunchTask": "vite preview"
+    },
+    {
+      "name": "Build (vite)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run build"
+    }
+  ]
+}
+
